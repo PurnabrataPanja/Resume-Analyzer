@@ -91,12 +91,6 @@ The app has no required secrets and no required external services.
 
 The role selector includes broad profiles plus specific developer tracks such as MERN Stack Developer, Django Developer, and Spring Boot Developer. Each role has its own required and preferred skill taxonomy.
 
-## Commit Recommendations
-
-```bash
-git add .
-git commit -m "chore: scaffold resume analyzer app"
-git commit -m "feat: add local resume parsing and scoring"
 git commit -m "feat: add history dashboard and report exports"
 git commit -m "test: cover validation scoring history and accessibility"
 git commit -m "docs: add setup deployment and privacy guide"
