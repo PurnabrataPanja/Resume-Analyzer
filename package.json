@@ -1,0 +1,59 @@
+{
+  "name": "resume-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test tests/e2e/accessibility.spec.ts"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^4.5.1",
+    "clsx": "^2.1.1",
+    "dexie": "^4.4.4",
+    "dompurify": "^3.4.11",
+    "lucide-react": "^1.23.0",
+    "mammoth": "^1.12.0",
+    "next": "16.2.10",
+    "pdfjs-dist": "^6.1.200",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "retext-english": "^5.0.0",
+    "retext-indefinite-article": "^5.0.0",
+    "retext-readability": "^8.0.0",
+    "retext-repeated-words": "^5.0.0",
+    "tailwind-merge": "^3.6.0",
+    "unified": "^11.0.5",
+    "vfile": "^6.0.3"
+  },
+  "overrides": {
+    "postcss": "8.5.16"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.4",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
+  }
+}
