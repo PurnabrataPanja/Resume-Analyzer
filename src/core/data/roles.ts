@@ -93,6 +93,103 @@ export const jobRoles: JobRoleProfile[] = [
     ],
   },
   {
+    id: "mern-stack",
+    title: "MERN Stack Developer",
+    summary:
+      "MongoDB, Express, React, Node.js, APIs, authentication, and deployment.",
+    expectedSections: commonSections,
+    requiredSkills: [
+      skill("mongodb", "MongoDB", ["mongoose", "atlas"], 1.4),
+      skill("express", "Express.js", ["express", "express js"], 1.4),
+      skill("react", "React", ["react.js", "reactjs"], 1.4),
+      skill("node", "Node.js", ["nodejs", "node"], 1.4),
+      skill("javascript", "JavaScript", ["js", "ecmascript"], 1.2),
+      skill("api", "REST API", ["rest", "api design", "crud api"], 1.2),
+      skill("auth", "Authentication", ["jwt", "bcrypt", "oauth"], 1),
+    ],
+    preferredSkills: [
+      skill("typescript", "TypeScript", ["ts"]),
+      skill("redux", "Redux", ["redux toolkit", "state management"]),
+      skill("deployment", "Deployment", [
+        "vercel",
+        "render",
+        "railway",
+        "netlify",
+      ]),
+      skill("testing", "Testing", ["jest", "vitest", "supertest"]),
+      skill("payments", "Payments", ["stripe", "razorpay"]),
+    ],
+  },
+  {
+    id: "django-developer",
+    title: "Django Developer",
+    summary:
+      "Django, DRF, relational databases, admin workflows, auth, and deployment.",
+    expectedSections: commonSections,
+    requiredSkills: [
+      skill("python", "Python", ["python3"], 1.4),
+      skill("django", "Django", ["django framework"], 1.6),
+      skill("drf", "Django REST Framework", ["drf", "django rest"], 1.4),
+      skill(
+        "database",
+        "PostgreSQL / SQL",
+        ["postgresql", "postgres", "sql"],
+        1.2,
+      ),
+      skill("auth", "Authentication", ["permissions", "sessions", "jwt"], 1),
+      skill("testing", "Testing", ["pytest", "django test"], 1),
+    ],
+    preferredSkills: [
+      skill("celery", "Celery", ["redis", "background tasks"]),
+      skill("docker", "Docker", ["containers"]),
+      skill("deployment", "Deployment", [
+        "gunicorn",
+        "nginx",
+        "vercel",
+        "railway",
+      ]),
+      skill("security", "Security", ["csrf", "owasp", "input validation"]),
+    ],
+  },
+  {
+    id: "spring-boot-developer",
+    title: "Spring Boot Developer",
+    summary:
+      "Spring Boot APIs, microservices, persistence, security, and testable Java services.",
+    expectedSections: commonSections,
+    requiredSkills: [
+      skill("java", "Java", ["core java", "java 17"], 1.4),
+      skill("spring-boot", "Spring Boot", ["springboot", "spring"], 1.6),
+      skill(
+        "spring-security",
+        "Spring Security",
+        ["oauth2", "jwt", "security"],
+        1.2,
+      ),
+      skill("jpa", "JPA / Hibernate", ["hibernate", "spring data jpa"], 1.2),
+      skill("api", "REST APIs", ["rest", "openapi", "swagger"], 1.2),
+      skill(
+        "testing",
+        "JUnit / Mockito",
+        ["junit", "mockito", "integration testing"],
+        1,
+      ),
+    ],
+    preferredSkills: [
+      skill("microservices", "Microservices", [
+        "service discovery",
+        "api gateway",
+      ]),
+      skill("docker", "Docker", ["containers"]),
+      skill("kafka", "Kafka", ["rabbitmq", "messaging"]),
+      skill("observability", "Observability", [
+        "actuator",
+        "prometheus",
+        "logs",
+      ]),
+    ],
+  },
+  {
     id: "data-analyst",
     title: "Data Analyst",
     summary: "SQL, dashboards, analysis, visualization, and business insight.",

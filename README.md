@@ -8,6 +8,7 @@ A free, no-login AI Resume Analyzer that runs in the browser and deploys on Verc
 - Extract text locally with open-source parsers.
 - Score the resume against a selected role using deterministic ATS rules.
 - Detect missing role skills, section gaps, weak impact signals, writing issues, and formatting risks.
+- Analyze developer proof signals such as GitHub/portfolio links, testing, deployment, certifications, measurable outcomes, and weak phrasing.
 - Store analysis history locally in IndexedDB.
 - Export/import history as JSON.
 - Download PDF or JSON reports.
@@ -85,6 +86,10 @@ The app has no required secrets and no required external services.
 - ATS formatting: 15 points
 - Grammar/readability: 10 points
 - Contact/profile completeness: 5 points
+
+## Included Target Roles
+
+The role selector includes broad profiles plus specific developer tracks such as MERN Stack Developer, Django Developer, and Spring Boot Developer. Each role has its own required and preferred skill taxonomy.
 
 ## Commit Recommendations
 

@@ -3,7 +3,7 @@ import {
   analyzeResume,
   detectSkills,
 } from "@/core/application/analysis-engine";
-import { getRoleById } from "@/core/data/roles";
+import { getRoleById, jobRoles } from "@/core/data/roles";
 import type { ExtractedResume } from "@/core/domain/types";
 
 const frontendRole = getRoleById("frontend");
@@ -36,6 +36,25 @@ const extracted: ExtractedResume = {
 };
 
 describe("analysis engine", () => {
+  it("includes specific developer target roles", () => {
+    const roleIds = jobRoles.map((role) => role.id);
+
+    expect(roleIds).toEqual(
+      expect.arrayContaining([
+        "mern-stack",
+        "django-developer",
+        "spring-boot-developer",
+      ]),
+    );
+    expect(roleIds).not.toEqual(
+      expect.arrayContaining([
+        "python-developer",
+        "java-developer",
+        "node-express",
+      ]),
+    );
+  });
+
   it("detects configured role skills using aliases", () => {
     const detected = detectSkills(extracted.text.toLowerCase(), frontendRole);
     expect(detected.map((skill) => skill.id)).toEqual(
@@ -54,5 +73,36 @@ describe("analysis engine", () => {
     expect(analysis.roleId).toBe("frontend");
     expect(analysis.suggestions.length).toBeGreaterThan(0);
     expect(JSON.stringify(analysis)).not.toContain(extracted.text);
+  });
+
+  it("flags developer resumes that lack proof, testing, and targeted role coverage", async () => {
+    const weakResume: ExtractedResume = {
+      ...extracted,
+      text: `
+        Alex Candidate
+        alex@example.com
+        Summary
+        Hardworking quick learner and team player.
+        Skills
+        HTML, CSS, basic knowledge of JavaScript.
+        Experience
+        Responsible for websites. Worked on college pages.
+        Education
+        Bachelor of Computer Applications
+      `,
+      wordCount: 42,
+    };
+
+    const analysis = await analyzeResume(weakResume, getRoleById("mern-stack"));
+    const findingIds = analysis.findings.map((finding) => finding.id);
+
+    expect(findingIds).toEqual(
+      expect.arrayContaining([
+        "low-role-coverage",
+        "developer-project-proof",
+        "developer-testing-proof",
+        "buzzword-specificity",
+      ]),
+    );
   });
 });

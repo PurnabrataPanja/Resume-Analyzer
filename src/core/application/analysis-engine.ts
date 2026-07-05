@@ -29,18 +29,30 @@ const categoryLabels: Record<ScoreCategoryKey, string> = {
 
 const sectionPatterns: Record<string, RegExp[]> = {
   contact: [/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i, /\+?\d[\d\s().-]{8,}/],
-  summary: [/(^|\n)\s*(summary|profile|objective|about)\s*[:\n-]/i],
+  summary: [
+    /(^|\n)\s*(summary|profile|objective|about)\s*[:\n-]/i,
+    /\b(summary|professional summary|profile|objective)\b/i,
+  ],
   skills: [
     /(^|\n)\s*(technical skills|skills|core competencies|tools)\s*[:\n-]/i,
+    /\b(technical skills|core competencies|skills)\b/i,
   ],
   experience: [
     /(^|\n)\s*(experience|work experience|employment|professional experience)\s*[:\n-]/i,
+    /\b(work experience|professional experience|employment history|experience)\b/i,
   ],
   education: [
     /(^|\n)\s*(education|academic|degree|university|college)\s*[:\n-]/i,
+    /\b(education|degree|university|college|bachelor|master)\b/i,
   ],
-  projects: [/(^|\n)\s*(projects|portfolio|selected work)\s*[:\n-]/i],
-  certifications: [/(^|\n)\s*(certifications|licenses|credentials)\s*[:\n-]/i],
+  projects: [
+    /(^|\n)\s*(projects|portfolio|selected work)\s*[:\n-]/i,
+    /\b(projects|portfolio|selected work|github)\b/i,
+  ],
+  certifications: [
+    /(^|\n)\s*(certifications|licenses|credentials)\s*[:\n-]/i,
+    /\b(certifications|certified|certificate|licenses|credentials)\b/i,
+  ],
 };
 
 const actionVerbs = [
@@ -60,6 +72,92 @@ const actionVerbs = [
   "implemented",
   "analyzed",
 ];
+
+const weakPhrases = [
+  "responsible for",
+  "worked on",
+  "helped with",
+  "involved in",
+  "participated in",
+  "familiar with",
+  "basic knowledge",
+];
+
+const buzzwords = [
+  "hardworking",
+  "self motivated",
+  "self-motivated",
+  "team player",
+  "quick learner",
+  "dynamic",
+  "passionate",
+  "results driven",
+  "detail oriented",
+];
+
+const projectProofTerms = [
+  "github.com",
+  "gitlab.com",
+  "portfolio",
+  "live demo",
+  "deployed",
+  "production",
+  "repository",
+  "source code",
+];
+
+const testingTerms = [
+  "test",
+  "testing",
+  "unit test",
+  "integration test",
+  "e2e",
+  "jest",
+  "vitest",
+  "pytest",
+  "junit",
+  "mockito",
+  "playwright",
+  "cypress",
+  "selenium",
+];
+
+const deploymentTerms = [
+  "deployed",
+  "vercel",
+  "netlify",
+  "render",
+  "railway",
+  "aws",
+  "azure",
+  "gcp",
+  "docker",
+  "ci/cd",
+  "github actions",
+];
+
+const commonTypoPatterns = [
+  /\bexperiance\b/i,
+  /\bresponsiblity\b/i,
+  /\bjavscript\b/i,
+  /\bpyhton\b/i,
+  /\bmangodb\b/i,
+  /\bpostgress\b/i,
+  /\brelevent\b/i,
+  /\bacheivement\b/i,
+];
+
+interface EvidenceSignals {
+  metricCount: number;
+  actionVerbCount: number;
+  weakPhraseCount: number;
+  buzzwordCount: number;
+  projectProofCount: number;
+  testingProofCount: number;
+  deploymentProofCount: number;
+  certificationProofCount: number;
+  personalPronounCount: number;
+}
 
 export async function analyzeResume(
   extracted: ExtractedResume,
@@ -82,6 +180,7 @@ export async function analyzeResume(
     extracted,
     role,
     scores,
+    detectedSkills,
     missingSkills,
     sectionCoverage,
     languageIssues,
@@ -228,6 +327,32 @@ function findDeterministicLanguageIssues(text: string): LanguageIssue[] {
       severity: "warning",
     });
   }
+  if (commonTypoPatterns.some((pattern) => pattern.test(text))) {
+    issues.push({
+      id: "language-common-typo",
+      ruleId: "resume-typo",
+      reason: "Common resume or technology spelling mistakes were detected.",
+      severity: "warning",
+    });
+  }
+  if (countTermMatches(text, /\b(i|me|my|we|our)\b/gi) > 3) {
+    issues.push({
+      id: "language-pronouns",
+      ruleId: "resume-tone",
+      reason:
+        "Frequent personal pronouns can make resume bullets feel less direct.",
+      severity: "info",
+    });
+  }
+  if (buzzwords.some((phrase) => containsTerm(text.toLowerCase(), phrase))) {
+    issues.push({
+      id: "language-buzzwords",
+      ruleId: "resume-specificity",
+      reason:
+        "Generic buzzwords were detected without necessarily proving impact.",
+      severity: "info",
+    });
+  }
   if (/\b([a-z]+)\s+\1\b/i.test(text)) {
     issues.push({
       id: "language-repeated-word",
@@ -258,6 +383,7 @@ function calculateScores(
   sectionCoverage: Record<string, boolean>,
   languageIssues: LanguageIssue[],
 ): AtsScore {
+  const evidence = getEvidenceSignals(extracted.text);
   const requiredScore = weightedSkillScore(
     role.requiredSkills,
     detectedSkills,
@@ -277,23 +403,19 @@ function calculateScores(
     20,
   );
 
-  const metrics = (
-    extracted.text.match(
-      /(\d+%|\$\d+|\b\d+x\b|\b\d+\+?\s+(users|clients|projects|tickets|hours|days)\b)/gi,
-    ) ?? []
-  ).length;
-  const verbHits = actionVerbs.filter((verb) =>
-    containsTerm(extracted.text.toLowerCase(), verb),
-  ).length;
   const impact = clampScore(
-    Math.min(metrics * 3, 9) + Math.min(verbHits, 6),
+    Math.min(evidence.metricCount * 3, 9) +
+      Math.min(evidence.actionVerbCount, 6),
     15,
   );
 
   const formattingDeductions =
     (extracted.pageEstimate > 3 ? 3 : 0) +
     (/[^\S\r\n]{8,}/.test(extracted.text) ? 2 : 0) +
-    ((extracted.text.match(/[•▪●]/g) ?? []).length > 35 ? 1 : 0) +
+    ((extracted.text.match(/[\u2022\u25aa\u25cf]/g) ?? []).length > 35
+      ? 1
+      : 0) +
+    (hasTooManyDecorativeSeparators(extracted.text) ? 2 : 0) +
     (extracted.wordCount < 250 ? 4 : 0);
   const formatting = clampScore(15 - formattingDeductions, 15);
 
@@ -321,7 +443,7 @@ function calculateScores(
       "impact",
       impact,
       15,
-      `${metrics} measurable outcome signals found.`,
+      `${evidence.metricCount} measurable outcome signals found.`,
     ),
     formatting: makeCategory(
       "formatting",
@@ -387,6 +509,55 @@ function contactScore(text: string) {
   return checks.filter((pattern) => pattern.test(text)).length * 1.25;
 }
 
+function getEvidenceSignals(text: string): EvidenceSignals {
+  const lowerText = text.toLowerCase();
+
+  return {
+    metricCount: countTermMatches(
+      text,
+      /(\d+%|\$\d+|\b\d+x\b|\b\d+\+?\s+(users|clients|projects|tickets|hours|days|features|apis|pages|reports)\b)/gi,
+    ),
+    actionVerbCount: actionVerbs.filter((verb) => containsTerm(lowerText, verb))
+      .length,
+    weakPhraseCount: weakPhrases.filter((phrase) =>
+      containsTerm(lowerText, phrase),
+    ).length,
+    buzzwordCount: buzzwords.filter((phrase) => containsTerm(lowerText, phrase))
+      .length,
+    projectProofCount: projectProofTerms.filter((phrase) =>
+      containsTerm(lowerText, phrase),
+    ).length,
+    testingProofCount: testingTerms.filter((phrase) =>
+      containsTerm(lowerText, phrase),
+    ).length,
+    deploymentProofCount: deploymentTerms.filter((phrase) =>
+      containsTerm(lowerText, phrase),
+    ).length,
+    certificationProofCount: countTermMatches(
+      text,
+      /\b(certification|certified|certificate|aws certified|oracle certified|azure fundamentals)\b/gi,
+    ),
+    personalPronounCount: countTermMatches(text, /\b(i|me|my|we|our)\b/gi),
+  };
+}
+
+function countTermMatches(text: string, pattern: RegExp) {
+  return (text.match(pattern) ?? []).length;
+}
+
+function hasTooManyDecorativeSeparators(text: string) {
+  return (
+    (text.match(/[|]{3,}/g) ?? []).length > 2 ||
+    (text.match(/[-_=]{8,}/g) ?? []).length > 1
+  );
+}
+
+function isDeveloperRole(role: JobRoleProfile) {
+  return /developer|engineer|mern|node|python|java|spring|django|frontend|backend|full stack/i.test(
+    role.title,
+  );
+}
+
 function makeCategory(
   key: ScoreCategoryKey,
   score: number,
@@ -406,11 +577,20 @@ function buildFindings(
   extracted: ExtractedResume,
   role: JobRoleProfile,
   scores: AtsScore,
+  detectedSkills: DetectedSkill[],
   missingSkills: MissingSkill[],
   sectionCoverage: Record<string, boolean>,
   languageIssues: LanguageIssue[],
 ): AnalysisFinding[] {
   const findings: AnalysisFinding[] = [];
+  const evidence = getEvidenceSignals(extracted.text);
+  const requiredDetectedCount = detectedSkills.filter(
+    (skill) => skill.priority === "required",
+  ).length;
+  const requiredCoverage =
+    role.requiredSkills.length > 0
+      ? requiredDetectedCount / role.requiredSkills.length
+      : 1;
 
   if (missingSkills.some((skill) => skill.priority === "required")) {
     findings.push({
@@ -423,6 +603,18 @@ function buildFindings(
       } required ${role.title} skills were not detected.`,
       recommendation:
         "Add honest project, work, or certification evidence for the missing required skills.",
+    });
+  }
+
+  if (requiredCoverage < 0.5) {
+    findings.push({
+      id: "low-role-coverage",
+      category: "skills",
+      severity: "warning",
+      title: "Role keyword coverage is low",
+      detail: `Only ${requiredDetectedCount}/${role.requiredSkills.length} required role skills were detected.`,
+      recommendation:
+        "Retarget the skills and project bullets toward the selected role before applying.",
     });
   }
 
@@ -450,6 +642,88 @@ function buildFindings(
       detail: "Few measurable outcomes or strong action verbs were detected.",
       recommendation:
         "Rewrite bullets with action verb, scope, result, and metric where possible.",
+    });
+  }
+
+  if (evidence.weakPhraseCount >= 2) {
+    findings.push({
+      id: "weak-phrasing",
+      category: "impact",
+      severity: "warning",
+      title: "Weak ownership phrases reduce impact",
+      detail: `${evidence.weakPhraseCount} weak phrases such as "responsible for" or "worked on" were detected.`,
+      recommendation:
+        "Start bullets with strong verbs and describe the result you produced.",
+    });
+  }
+
+  if (evidence.buzzwordCount >= 2 && evidence.metricCount < 2) {
+    findings.push({
+      id: "buzzword-specificity",
+      category: "language",
+      severity: "info",
+      title: "Generic buzzwords need proof",
+      detail: `${evidence.buzzwordCount} generic phrases were detected with limited measurable evidence.`,
+      recommendation:
+        "Replace soft claims with specific tools, project scope, numbers, or outcomes.",
+    });
+  }
+
+  if (isDeveloperRole(role) && evidence.projectProofCount === 0) {
+    findings.push({
+      id: "developer-project-proof",
+      category: "skills",
+      severity: "warning",
+      title: "Developer project proof is missing",
+      detail:
+        "No GitHub, portfolio, live demo, repository, deployment, or production proof was detected.",
+      recommendation:
+        "Add project links or deployment evidence so recruiters can verify your developer work.",
+    });
+  }
+
+  if (isDeveloperRole(role) && evidence.testingProofCount === 0) {
+    findings.push({
+      id: "developer-testing-proof",
+      category: "skills",
+      severity: "info",
+      title: "Testing evidence is missing",
+      detail: "No testing framework or test strategy signal was detected.",
+      recommendation:
+        "Mention real unit, integration, API, or E2E tests where you used them.",
+    });
+  }
+
+  if (
+    isDeveloperRole(role) &&
+    evidence.deploymentProofCount === 0 &&
+    scores.categories.skills.score >= 18
+  ) {
+    findings.push({
+      id: "deployment-proof",
+      category: "impact",
+      severity: "info",
+      title: "Deployment evidence would strengthen the resume",
+      detail:
+        "The resume shows technical skills, but no deployment, cloud, Docker, or CI/CD signal was detected.",
+      recommendation:
+        "Add where the app or service ran, how it was deployed, or what CI/CD tools were used.",
+    });
+  }
+
+  if (
+    /cloud|security|java|spring|devops|cybersecurity/i.test(role.title) &&
+    evidence.certificationProofCount === 0
+  ) {
+    findings.push({
+      id: "certification-proof",
+      category: "skills",
+      severity: "info",
+      title: "Certifications may help this role",
+      detail:
+        "No certification signal was detected for a role where credentials can improve recruiter confidence.",
+      recommendation:
+        "Add relevant certifications if you have them; otherwise leave this out rather than inventing one.",
     });
   }
 
